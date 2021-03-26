@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ec.com.dinersclub.dddmodules.application.grpc";
+option java_outer_classname = "TarjetaProto";
+
+package grpc;
+
+service Tarjeta {
+    rpc createTarjetaCommand (TarjetaRequest) returns (TarjetaResponse) {}
+}
+
+message TarjetaRequest {
+    string id = 1;
+    string nombre = 2;
+}
+
+message TarjetaResponse {
+    string id = 1;
+}

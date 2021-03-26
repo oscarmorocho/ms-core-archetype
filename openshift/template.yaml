@@ -1,0 +1,139 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: OpenShift template
+    tags: "instant-${APP_NAME},${APP_NAME}"
+  name: ${APP_NAME}
+objects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: ${APP_NAME}
+      name: ${APP_NAME}
+    spec:
+      ports:
+        - name: "${APP_NAME}-http"
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        - name: "${APP_NAME}-grpc"
+          port: 9000
+          protocol: TCP
+          targetPort: 9000
+      selector:
+        app: ${APP_NAME}
+        deploymentconfig: ${APP_NAME}
+      sessionAffinity: None
+      type: ClusterIP
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      annotations:
+        description: Route http service.
+      labels:
+        app: ${APP_NAME}
+      name: ${APP_NAME}
+    spec:
+      port:
+        targetPort: ${APP_NAME}
+      tls:
+        termination: edge
+      to:
+        kind: Service
+        name: ${APP_NAME}
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: ${APP_NAME}
+        deploymentconfig: ${APP_NAME}
+      name: ${APP_NAME}
+    spec:
+      replicas: 1
+      selector:
+        app: ${APP_NAME}
+        deploymentconfig: ${APP_NAME}
+      strategy:
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 0
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: ${APP_NAME}
+            deploymentconfig: ${APP_NAME}
+        spec:
+          containers:
+            - env:
+                - name: APP_NAME
+                  value: "${APP_NAME}"
+                - name: APP_VERSION
+                  value: "${APP_VERSION}"
+                - name: AMBIENTE
+                  value: "${AMBIENTE}"
+              image: "${REGISTRY}"
+              imagePullPolicy: IfNotPresent
+              name: ${APP_NAME}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 9000
+                  protocol: TCP
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/live
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 20
+                successThreshold: 1
+                timeoutSeconds: 5
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /health/ready
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 20
+                successThreshold: 1
+                timeoutSeconds: 5
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 500m
+                  memory: 256Mi
+              terminationMessagePath: /dev/termination-log
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+      triggers:
+      - type: ConfigChange
+
+parameters:
+  - displayName: App name
+    name: APP_NAME
+    required: true
+    value: ""
+  - displayName: App version
+    name: APP_VERSION
+    required: true
+    value: ""
+  - name: AMBIENTE
+    required: true
+    value: ""
+  - name: REGISTRY
+    required: true
+    value: ""
+    
+message: "App access URL: https://${APP_NAME}-apiservice-microservicios.apps.dinersclub-dev.b6r7.p1.openshiftapps.com"

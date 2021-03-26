@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>ec.com.dinersclub.dddmodules.application</groupId>
+  <artifactId>application</artifactId>
+  
+  <packaging>jar</packaging>
+  
+  <parent>
+    <groupId>ec.com.dinersclub.dddmodules</groupId>
+    <artifactId>ms-ddd-archetype</artifactId>
+    <version>1.0.39</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  
+  <dependencies>
+    <dependency>
+      <groupId>ec.com.dinersclub.dddmodules.domain</groupId>
+      <artifactId>domain</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ec.com.dinersclub.dddmodules.infrastructure</groupId>
+      <artifactId>infrastructure</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+  	  <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-mutiny</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+	  <groupId>io.quarkus</groupId>
+	  <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-amqp</artifactId>
+    </dependency>
+    <dependency>
+	  <groupId>io.quarkus</groupId>
+	  <artifactId>quarkus-smallrye-openapi</artifactId>
+	</dependency>
+	<dependency>
+   	  <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-test-h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+	  <groupId>io.quarkus</groupId>
+	  <artifactId>quarkus-container-image-docker</artifactId>
+	</dependency>
+  </dependencies>
+  
+</project>
