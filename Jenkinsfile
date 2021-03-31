@@ -35,7 +35,7 @@ spec:
         REGISTRY = "331022218908.dkr.ecr.us-east-1.amazonaws.com"
         REPOSITORY = "apiservice"
         PUSH = ""
-        NAMESPACE = "apiservice-microservicios"
+        NAMESPACE = ""
         URL_OPENSHIFT = "https://api.dinersclub-dev.b6r7.p1.openshiftapps.com:6443"
     }
     options {
@@ -75,19 +75,27 @@ spec:
                     switch(branch) {
                     case 'develop': 
                         AMBIENTE = 'dev'
-                        // NAMESPACE = 'develop'
+                        NAMESPACE = 'apiservice-microservicios'
+                    case 'semantic-release/patch': 
+                        AMBIENTE = 'rc'
+                        break
+                    case 'semantic-release/minor': 
+                        AMBIENTE = 'rc'
+                        break
+                    case 'semantic-release/major': 
+                        AMBIENTE = 'rc'
                         break
                     case 'release': 
                         AMBIENTE = 'qa'
-                        // NAMESPACE = 'qa'
+                        NAMESPACE = 'apiservice-microservicios'
                         break
                     case 'uat': 
                         AMBIENTE = 'uat'
-                        // NAMESPACE = 'uat'
+                        NAMESPACE = 'apiservice-microservicios'
                         break
                     case 'preprod': 
                         AMBIENTE = 'preprod'
-                        // NAMESPACE = 'preproduction'
+                        NAMESPACE = 'apiservice-microservicios'
                         break  
                     case 'master': 
                         AMBIENTE = 'master'
@@ -110,13 +118,35 @@ spec:
                     
                     def branch = "${env.BRANCH_NAME}"
                     
-                    if (branch == "semantic-release"){
+                    if (branch == "semantic-release/major"){
+                    
+                        echo "release version"
+                    	//sh "mvn --batch-mode release:update-versions"
+                    	APP_VERSION = readMavenPom().getVersion()
+                    	def values = APP_VERSION.split('-')
+                        def major = values[0].split('\\.')
+                        def new_major = major[0].toInteger() + 1
+                        APP_VERSION = "${new_major}.0.0-${AMBIENTE}"
+                        echo "Version nueva: ${APP_VERSION}"
+                        
+                    }else if (branch == "semantic-release/minor"){
+                    
+                        echo "release version"
+                    	//sh "mvn --batch-mode release:update-versions"
+                    	APP_VERSION = readMavenPom().getVersion()
+                    	def values = APP_VERSION.split('-')
+                        def minor = values[0].split('\\.')
+                        def new_minor = minor[1].toInteger() + 1
+                        APP_VERSION = "${minor[0]}.${new_minor}.0-${AMBIENTE}"
+                        echo "Version nueva: ${APP_VERSION}"
+                        
+                    }else if (branch == "semantic-release/patch"){
                     
                         echo "release version"
                     	sh "mvn --batch-mode release:update-versions"
                     	APP_VERSION = readMavenPom().getVersion()
                     	def values = APP_VERSION.split('-')
-                        APP_VERSION = values[0]
+                        APP_VERSION = "${values[0]}-${AMBIENTE}"
                         echo "Version nueva: ${APP_VERSION}"
                         
                     }else if (branch != "master"){
@@ -170,24 +200,26 @@ spec:
                 }
                 stage('Kiuwan Test'){
                     steps {
-                        //container('kiuwan') {
-                            script {
-                                echo " --> Kiuwan Scan"
-                                kiuwan connectionProfileUuid: 'eh9q-SJTq',
-                                sourcePath: '/application',
-                                applicationName: "${APP_NAME}",
-                                indicateLanguages: true,
-                                languages:'java',
-                                measure: 'NONE'
-                            }
-                        //}
+                        script {
+                            echo " --> Kiuwan Scan"
+		                    kiuwan connectionProfileUuid: 'eh9q-SJTq',
+		                    sourcePath: "${WORKSPACE}",
+		                    applicationName: "${APP_NAME}",
+		                    failureThreshold: 40.0,
+		                    unstableThreshold: 90.0
+		                    
+		                    def kiuwanOutput = readJSON file: "${WORKSPACE}/kiuwan/output.json"
+							def secRating = kiuwanOutput.Security.Rating
+							
+							echo "Rating : ${secRating}"
+                        }
                     }
                 }
             }
         }
         stage('Stage: Package'){
             stages {
-		        stage('Stage: ECR Token') {
+		        stage('ECR Token') {
 			        steps {
 			            container('tools') {
 			                script {
@@ -209,18 +241,22 @@ spec:
 			            }
 			        }
 		        }
-		        stage('Stage: ECR Push') { 
+		        stage('ECR Push') { 
 		            agent { 
 		                label "${jenkinsWorker}"
 		            }
 		            steps {
 		                script {
-		                    echo "Maven build..."
+		                    //echo "Maven build..."
 		                    sh "\\cp infrastructure/src/main/resources/META-INF/microprofile-config-dev.properties infrastructure/src/main/resources/META-INF/microprofile-config.properties"
 		                    sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true"
 		                    
+		                    //sh "mvn verify -Pnative"
+		                    //sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true -Pnative -Dquarkus.native.container-build=true"
+		                    
 		                    echo "Docker Build..."
 		                    sh "cd application && docker build -f src/main/docker/Dockerfile.jvm -t ${IMAGEN}:${APP_VERSION} ."
+		                    //sh "cd application && docker build -f src/main/docker/Dockerfile.native -t ${IMAGEN}:${APP_VERSION} ."
 		                    
 		                    echo "Docker Tag..."
 		                    sh "docker tag ${IMAGEN}:${APP_VERSION} ${PUSH}:${APP_VERSION}"
@@ -274,11 +310,16 @@ spec:
             }
         }
         stage('Stage: Deployment') {
-            when { 
-                not { 
-                    branch 'master' 
-                }
-            }
+            when {
+		       not {
+		          anyOf {
+		            branch 'master'
+		            branch 'semantic-release/patch'
+		            branch 'semantic-release/minor'
+		            branch 'semantic-release/major'
+		          }
+		       }
+		    }
             steps {
                 container('tools') {
                     script {
@@ -327,11 +368,16 @@ EOF
             }
         }
         stage('Stage: Deployment Test') {
-            when { 
-                not { 
-                    branch 'master' 
-                }
-            }
+            when {
+		       not {
+		          anyOf {
+		            branch 'master'
+		            branch 'semantic-release/patch'
+		            branch 'semantic-release/minor'
+		            branch 'semantic-release/major'
+		          }
+		       }
+		    }
             steps {
                 container('tools') {
                     script {
@@ -370,43 +416,46 @@ EOF
                 }
             }
         }
-        stage('Stage: Functional Test') {
+        stage('Stage: Quality Test'){
+        	when {
+                branch 'release'
+            }
             agent { 
                 label "${jenkinsWorker}"
             }
-            when {
-                branch 'release'
-            }
-            steps {
-                script {
-                    try {
-						sh 'cd test && npm install'
-                        sh 'cd test && npm test'
-			    
-						sh 'cd test && cp reports.json $WORKSPACE'
-                        cucumber buildStatus: 'SUCCESS', fileIncludePattern: 'reports.json'
-                    } catch (e) {
-						sh 'cd test && cp reports.json $WORKSPACE'
-                        cucumber buildStatus: 'FAIL', fileIncludePattern: 'reports.json'
-                    }
-                }
-            }
-        }
-        stage('Stage: Report Functional Test') {
-            agent { 
-                label "${jenkinsWorker}"
-            }
-            when { 
-                branch 'release'
-            }
-            steps {
-                script {
-                    echo " --> Reporte Cucumber..."
-                    echo "REPORT-TEST: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}cucumber-html-reports/overview-features.html"
-                }
-            }
-        }
+            stages {
+		        stage('Functional Test') {
+		            steps {
+		                script {
+		                    try {
+								sh 'cd test && npm install'
+		                        sh 'cd test && npm test'
+					    
+								sh 'cd test && cp reports.json $WORKSPACE'
+		                        cucumber buildStatus: 'SUCCESS', fileIncludePattern: 'reports.json'
+		                    } catch (e) {
+								sh 'cd test && cp reports.json $WORKSPACE'
+		                        cucumber buildStatus: 'FAIL', fileIncludePattern: 'reports.json'
+		                    }
+		                }
+		            }
+		        }
+		        stage('Report Functional Test') {
+		            steps {
+		                script {
+		                    echo " --> Reporte Cucumber..."
+		                    echo "REPORT-TEST: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}cucumber-html-reports/overview-features.html"
+		                }
+		            }
+		        }
+	    	}
+    	}
         stage('Stage: Release') {
+            when { 
+                not { 
+                    branch 'develop' 
+                }
+            }
             agent { 
                 label "${jenkinsWorker}"
             }
@@ -414,41 +463,47 @@ EOF
                 script {
                     echo " --> Release..."
                     def branch = "${env.BRANCH_NAME}"
-                    
-                    if (branch == "semantic-release"){
-                    	echo "release version"
-                    	sh "mvn --batch-mode release:update-versions -DdevelopmentVersion=${APP_VERSION}"
-                    }
-                    
                     def release = "v${APP_VERSION}"
-                    //if (branch != "master"){
-                    //	release = "v${APP_VERSION}-${env.BRANCH_NAME}"
-                    //}else{
-                    //	release = "v${APP_VERSION}"
-                    //}
-                    
-                    //echo "Remove .properties microprofile"
-                    //sh "rm -rf infrastructure/src/main/resources/META-INF/microprofile-config.properties"
 
-                    // Credentials
-                    withCredentials([usernamePassword(credentialsId: 'mponce-apiservice', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh label: "", 
-                        script: """
-                            #!/bin/bash
-                            
-                            git config --local credential.helper "!f() { echo username=\\${GIT_USERNAME}; echo password=\\${GIT_PASSWORD}; }; f"
-                            
-                            if [ "${env.BRANCH_NAME}" == "semantic-release" ]; then
-                            	git add -A
+					if (branch == "semantic-release/patch" || branch == "semantic-release/minor" || branch == "semantic-release/major"){
+					
+                    	def values = APP_VERSION.split('-')
+                    	sh "mvn --batch-mode release:update-versions -DdevelopmentVersion=${values[0]}-SNAPSHOT"
+                    	
+	                    // Credentials
+	                    withCredentials([usernamePassword(credentialsId: 'mponce-apiservice', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+	                        sh label: "", 
+	                        script: """
+	                            #!/bin/bash
+	                            
+	                            git config --local credential.helper "!f() { echo username=\\${GIT_USERNAME}; echo password=\\${GIT_PASSWORD}; }; f"
+	                            
+	                            echo " --> commit release candidate..."
+	                        	git add -A
 								git commit -m "add release ${release}"
 								git push --force origin HEAD:${env.BRANCH_NAME}
-							fi
-                            
-                            git tag ${release}
-                            git push --force origin ${release}
-                        
-                        """
-
+	                            
+	                            echo " --> create tag..."
+	                            git tag ${release}
+	                            git push --force origin ${release}
+	                        
+	                        """
+	                    }
+                    }else{
+                    	// Credentials
+	                    withCredentials([usernamePassword(credentialsId: 'mponce-apiservice', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+	                        sh label: "", 
+	                        script: """
+	                            #!/bin/bash
+	                            
+	                            git config --local credential.helper "!f() { echo username=\\${GIT_USERNAME}; echo password=\\${GIT_PASSWORD}; }; f"
+	                            
+	                            echo " --> create tag..."
+	                            git tag ${release}
+	                            git push --force origin ${release}
+	                        
+	                        """
+	                    }
                     }
                 }
             }
@@ -459,6 +514,9 @@ EOF
                     anyOf { 
                         branch 'develop'
                         branch 'master'
+                        branch 'semantic-release/patch'
+		            	branch 'semantic-release/minor'
+		            	branch 'semantic-release/major'
                     }
                 }
             }

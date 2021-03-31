@@ -1,0 +1,88 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+' uncomment the following line and comment the first to use locally
+' !include C4_Container.puml
+!include DEVICONS/angular.puml
+!include DEVICONS/dotnet.puml
+!include DEVICONS/java.puml
+!include DEVICONS/msql_server.puml
+!include FONTAWESOME/server.puml
+!include FONTAWESOME/envelope.puml
+
+' LAYOUT_TOP_DOWN()
+' LAYOUT_AS_SKETCH()
+LAYOUT_WITH_LEGEND()
+
+title Caso de ejemplo noche puntos Diners
+
+Person(customer, Customer, "Cliente que realiza compras y acumula puntos en sus compras para posteriormente pueda canjear sus puntos si califica")
+Container(mobile_app, "Mobile App", "JavaScript", "Aplicacion de cliente que permite ver el estado de sus cuentas de transacciones", "angular")
+Container(mobile_app_dashboard, "Mobile App Dashboard", "JavaScript", "Aplicacion que permite tener un dashboard de las transacciones ejecutadas", "angular")
+
+System_Boundary(c1, "Plataforma bancaria") {
+    
+    ContainerDb(database_premios, "Database", "SQL Database", "Base de datos para almacenar los consumo por cliente y campanha y registrar los premios", "mysql_server")
+    
+    Container(backend_premios, "Microservicio premios", "Java, Docker Container", "Encargado de reclamar y registrar los premios del cliente", "java")
+    Container(backend_consumos, "Microservicio consumos", "Java, Docker Container", "Encargado de verificar las transacciones de compra de un cliente", "java")
+    Container(backend_dashboard, "Microservicio dashboard", "Java, Docker Container", "", "java")
+    Container(backend_campanhas, "Microservicio campanhas", "Java, Docker Container", "Provides Internet banking functionality via API", "java")
+    Container(backend_consumo_reverso, "Microservicio consumo reverso", "Java, Docker Container", "Encargado de verificar el reverso de las transacciones", "java")
+    
+    
+    Container(backend_saga_campanhas, "Microservicio Trx Saga camapanhas", "Java, Docker Container", "Servicio para cargar las camapanhas por medio de trx a los sistemas core", "java")
+    Container(backend_bff_premios, "Bff premios", "Java, Docker Container", "Capa de presentación que permite ser de fachada para los microservicios asociados a los premios", "java")
+    Container(backend_bff_campanhas, "Bff canpanhas", "Java, Docker Container", "Capa presentación que permite ser de fachada para los microservicios asociados a las campañas", "java")
+
+    Container(backend_comercios, "Microservicio comercios", "Java, Docker Container", "Microservicio que gestiona los comercios", "java")
+    Container(backend_clientes, "Microservicio clientes", "Java, Docker Container", "Microservicio que gestiona los clientes", "java")
+
+    ContainerDb(banking_system, "Replica Sistema CAO", "SQL Database", "Fuente de información donde se registran las transacciones de compras de los clientes")
+    Container(backend_transferencias, "Microservicio transferencias", "Java, Docker Container", "Microservicio que permite ejecutar las transferencias",  "java")
+
+}
+
+System_Ext(auth_server, "Auth server", "Sistema externo que permite la autenticación y autorización de usuarios", "envelope")
+System_Ext(backend_server_notificaciones, "Servidor de notificaciones", "", "envelope")
+
+Rel(customer, mobile_app, "Uses")
+Rel(mobile_app, auth_server, "Uses")
+Rel(mobile_app_dashboard, backend_dashboard, "Uses")
+Rel(mobile_app, backend_bff_premios, "Uses")
+Rel(backend_premios, backend_saga_campanhas, "Uses")
+Rel(backend_saga_campanhas, backend_transferencias, "Ejecutar reverso tranferencia y enviar premio wallet")
+
+Rel(backend_saga_campanhas, backend_campanhas, "Debitar presupuestp")
+
+Rel(mobile_app, backend_bff_campanhas, "Uses")
+Rel(backend_bff_premios, backend_premios, "Reclamar premio", "GRPC")
+Rel(backend_bff_campanhas, backend_campanhas, "Uses", "JSON/HTTPS")
+
+Rel(backend_campanhas, backend_comercios, "Validar comercio")
+Rel(backend_campanhas, backend_clientes, "Validar socio")
+
+Rel(backend_campanhas, backend_dashboard, "Stream de premios entregados", "async, JSON/HTTPS")
+
+Rel(backend_consumos, backend_server_notificaciones, "Envío de notificaciones", "async, GRPC")
+Rel(backend_consumos, banking_system, "Verificar transacciones compra", "async, GRPC")
+Rel(banking_system, backend_server_notificaciones, "Enviar notificaciones")
+
+Rel(backend_consumo_reverso, banking_system, "Transaccion de reverso", "async, AMQP")
+Rel(backend_consumo_reverso, backend_server_notificaciones, "Enviar notificaciones")
+Rel(backend_consumo_reverso, backend_premios, "Uses")
+
+Rel(backend_campanhas, database_premios, "Registra/Usuario/Premios")
+
+Rel(backend_consumos, backend_campanhas, "Verifica si un cliente está suscrito a una campanha")
+Rel(backend_premios, database_premios, "Registrar premio")
+Rel(backend_consumos, database_premios, "Acumular consumos para el cliente y campanha")
+
+' Rel_Neighbor(web_app, spa, "Delivers")
+' Rel(spa, backend_api, "Uses", "async, JSON/HTTPS")
+
+' Rel_Back_Neighbor(database, backend_api, "Reads from and writes to", "sync, JDBC")
+
+' Rel_Neighbor(backend_api, banking_system, "Uses", "sync/async, XML/HTTPS")
+@enduml
