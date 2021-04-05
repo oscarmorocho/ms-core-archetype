@@ -80,7 +80,7 @@ objects:
                 - name: AMBIENTE
                   value: "${AMBIENTE}"
               image: "${REGISTRY}"
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: Always
               name: ${APP_NAME}
               ports:
                 - containerPort: 8080
