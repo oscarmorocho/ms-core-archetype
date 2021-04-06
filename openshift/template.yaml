@@ -37,7 +37,7 @@ objects:
       name: ${APP_NAME}
     spec:
       port:
-        targetPort: ${APP_NAME}
+        targetPort: "${APP_NAME}-http"
       tls:
         termination: edge
       to:

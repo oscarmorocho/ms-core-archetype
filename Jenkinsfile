@@ -122,8 +122,6 @@ spec:
                     if (branch == "semantic-release/major"){
                     
                         echo "release version"
-                    	//sh "mvn --batch-mode release:update-versions"
-                    	APP_VERSION = readMavenPom().getVersion()
                     	def values = APP_VERSION.split('-')
                         def major = values[0].split('\\.')
                         def new_major = major[0].toInteger() + 1
@@ -133,8 +131,6 @@ spec:
                     }else if (branch == "semantic-release/minor"){
                     
                         echo "release version"
-                    	//sh "mvn --batch-mode release:update-versions"
-                    	APP_VERSION = readMavenPom().getVersion()
                     	def values = APP_VERSION.split('-')
                         def minor = values[0].split('\\.')
                         def new_minor = minor[1].toInteger() + 1
@@ -153,14 +149,15 @@ spec:
                     }else if (branch != "master"){
                     
                         echo "environment version"
-                        def version = readMavenPom().getVersion()
-                    	APP_VERSION = "${version}-${branch}"
+                        def values = APP_VERSION.split('-')
+                    	APP_VERSION = "${values[0]}-${branch}"
                         echo "Version : ${APP_VERSION}"
                         
                     }else{
                     
                     	echo "stable version"
-                        APP_VERSION = readMavenPom().getVersion()
+                        def values = APP_VERSION.split('-')
+                    	APP_VERSION = "${values[0]}"
                         echo "Version : ${APP_VERSION}"
                         
                     }
@@ -173,7 +170,7 @@ spec:
                 }
             }
         }
-        stage('Stage: Test'){
+        /*stage('Stage: Test'){
             agent { 
                 label "${jenkinsWorker}"
             }
@@ -219,7 +216,7 @@ spec:
                     }
                 }
             }
-        }
+        }*/
         stage('Stage: Package'){
             when {
 		       not {
@@ -262,14 +259,13 @@ spec:
 		                    echo "Maven build..."
 		                    sh "rm -rf infrastructure/src/main/resources/META-INF/microprofile-config.properties"
 		                    sh "cp infrastructure/src/main/resources/META-INF/microprofile-config-dev.properties infrastructure/src/main/resources/META-INF/microprofile-config.properties"
-		                    sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true"
 		                    
-		                    //sh "mvn verify -Pnative"
-		                    //sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true -Pnative -Dquarkus.native.container-build=true"
+		                    //sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true"
+		                    sh "mvn clean package -Dmaven.test.skip=true -Dmaven.test.failure.ignore=true -Pnative"
 		                    
 		                    echo "Docker Build..."
-		                    sh "cd application && docker build -f src/main/docker/Dockerfile.jvm -t ${IMAGEN}:${APP_VERSION} ."
-		                    //sh "cd application && docker build -f src/main/docker/Dockerfile.native -t ${IMAGEN}:${APP_VERSION} ."
+		                    //sh "cd application && docker build -f src/main/docker/Dockerfile.jvm -t ${IMAGEN}:${APP_VERSION} ."
+		                    sh "cd application && docker build -f src/main/docker/Dockerfile.native -t ${IMAGEN}:${APP_VERSION} ."
 		                    
 		                    echo "Docker Tag..."
 		                    sh "docker tag ${IMAGEN}:${APP_VERSION} ${PUSH}:${APP_VERSION}"
