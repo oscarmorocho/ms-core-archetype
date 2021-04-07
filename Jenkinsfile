@@ -23,6 +23,7 @@ spec:
     - cat
     tty: true
 """
+"""
     }
   }
     environment {
@@ -100,6 +101,9 @@ spec:
                         break  
                     case 'master': 
                         AMBIENTE = 'master'
+                        break
+                    case 'main':
+                        AMBIENTE = 'main'
                         break
                     default:
                         println("Branch value error: " + branch)
