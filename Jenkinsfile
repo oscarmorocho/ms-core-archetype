@@ -487,11 +487,9 @@ EOF
                     def release = "v${APP_VERSION}"
 
 					if (branch == "semantic-release/patch" || branch == "semantic-release/minor" || branch == "semantic-release/major"){
-					
-                    	def develop_version = APP_VERSION.replace('.rc','')
-                    	echo "--> DdevelopmentVersion ${develop_version}"
-                    	sh "mvn --batch-mode release:update-versions -DdevelopmentVersion=${develop_version}"
-                    	
+
+                    	sh "mvn versions:set -DnewVersion=${APP_VERSION}"
+
 	                    // Credentials
 	                    withCredentials([usernamePassword(credentialsId: 'mponce-apiservice', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 	                        sh label: "", 
