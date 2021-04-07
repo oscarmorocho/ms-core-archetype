@@ -88,7 +88,7 @@ spec:
                         break
                     case 'release': 
                         AMBIENTE = 'qa'
-                        NAMESPACE = 'apiservice-microservicios'
+                        NAMESPACE = 'apiservice-workshop'
                         break
                     case 'uat': 
                         AMBIENTE = 'uat'
@@ -100,6 +100,9 @@ spec:
                         break  
                     case 'master': 
                         AMBIENTE = 'master'
+                        break
+                    case 'main':
+                        AMBIENTE = 'main'
                         break
                     default:
                         println("Branch value error: " + branch)
