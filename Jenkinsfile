@@ -88,7 +88,7 @@ spec:
                         break
                     case 'release': 
                         AMBIENTE = 'qa'
-                        NAMESPACE = 'apiservice-workshop'
+                        NAMESPACE = 'apiservice-microservicios'
                         break
                     case 'uat': 
                         AMBIENTE = 'uat'
