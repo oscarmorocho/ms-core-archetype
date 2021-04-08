@@ -25,10 +25,11 @@ nb-configuration.xml
 .factorypath
 
 # Nodejs
-/apickli
-/node_modules
+apickli
+node_modules
 package-lock.json
 reports.json
+yarn.lock
 
 # OSX
 .DS_Store

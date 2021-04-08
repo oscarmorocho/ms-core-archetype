@@ -1,16 +1,13 @@
 'use strict';
 
 const apickli = require('apickli/apickli.js');
-const {defineSupportCode} = require('cucumber');
+const {Before, setDefaultTimeout} = require('cucumber');
 
 
-
-defineSupportCode(function({Before}) {
-    Before(function() {
-        this.apickli = new apickli.Apickli('https', 'amer-demo16-test.apigee.net');
-        this.apickli.addRequestHeader('Cache-Control', 'no-cache');
-    });
+Before(function () {
+    this.apickli = new apickli.Apickli('https', 'amer-demo16-test.apigee.net');
+    this.apickli.addRequestHeader('Cache-Control', 'no-cache');
 });
-defineSupportCode(function({setDefaultTimeout}) {
-    setDefaultTimeout(60 * 1000); // this is in ms
+setDefaultTimeout(function () {
+    60 * 1000; // this is in ms
 });
