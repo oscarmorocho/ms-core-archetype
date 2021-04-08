@@ -88,7 +88,7 @@ spec:
                         break
                     case 'release': 
                         AMBIENTE = 'qa'
-                        NAMESPACE = 'apiservice-workshop'
+                        NAMESPACE = 'apiservice-microservicios'
                         break
                     case 'uat': 
                         AMBIENTE = 'uat'
@@ -128,7 +128,7 @@ spec:
                     	def values = APP_VERSION.split('-')
                         def major = values[0].split('\\.')
                         def new_major = major[0].toInteger() + 1
-                        APP_VERSION = "${new_major}.0.0-${AMBIENTE}"
+                        APP_VERSION = "${new_major}.0.0.${AMBIENTE}"
                         echo "Version nueva: ${APP_VERSION}"
                         
                     }else if (branch == "semantic-release/minor"){
@@ -137,7 +137,7 @@ spec:
                     	def values = APP_VERSION.split('-')
                         def minor = values[0].split('\\.')
                         def new_minor = minor[1].toInteger() + 1
-                        APP_VERSION = "${minor[0]}.${new_minor}.0-${AMBIENTE}"
+                        APP_VERSION = "${minor[0]}.${new_minor}.0.${AMBIENTE}"
                         echo "Version nueva: ${APP_VERSION}"
                         
                     }else if (branch == "semantic-release/patch"){
@@ -146,7 +146,7 @@ spec:
                     	sh "mvn --batch-mode release:update-versions"
                     	APP_VERSION = readMavenPom().getVersion()
                     	def values = APP_VERSION.split('-')
-                        APP_VERSION = "${values[0]}-${AMBIENTE}"
+                        APP_VERSION = "${values[0]}.${AMBIENTE}"
                         echo "Version nueva: ${APP_VERSION}"
                         
                     }else if (branch != "master"){
@@ -487,10 +487,9 @@ EOF
                     def release = "v${APP_VERSION}"
 
 					if (branch == "semantic-release/patch" || branch == "semantic-release/minor" || branch == "semantic-release/major"){
-					
-                    	def values = APP_VERSION.split('-')
-                    	sh "mvn --batch-mode release:update-versions -DdevelopmentVersion=${values[0]}-SNAPSHOT"
-                    	
+
+                    	sh "mvn versions:set -DnewVersion=${APP_VERSION}"
+
 	                    // Credentials
 	                    withCredentials([usernamePassword(credentialsId: 'mponce-apiservice', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 	                        sh label: "", 
