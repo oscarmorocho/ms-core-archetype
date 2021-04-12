@@ -20,12 +20,17 @@ import ec.com.dinersclub.dddmodules.application.cqrs.commands.ITarjetaCommandSer
 import ec.com.dinersclub.dddmodules.application.cqrs.commands.dto.CreateTarjetaCommand;
 import ec.com.dinersclub.dddmodules.application.cqrs.queries.ITarjetaQueryService;
 import ec.com.dinersclub.dddmodules.application.cqrs.queries.dto.TarjetaQuery;
+import ec.com.dinersclub.dddmodules.application.logs.ILogger;
+import ec.com.dinersclub.dddmodules.application.logs.dto.Log;
 
 @Path("/tarjetas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TarjetaResource {
-
+	
+	@Inject
+	ILogger log;
+	
 	@Inject
 	ITarjetaQueryService readService;
 	
@@ -40,6 +45,7 @@ public class TarjetaResource {
     @POST
     public Response add(@Valid CreateTarjetaCommand command) {
     	writeService.createTarjetaCommand(command);
+    	log.info(new Log("createTarjetaCommand", command));
     	return Response.status(201).build();
     }
 
