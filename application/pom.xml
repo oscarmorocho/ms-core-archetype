@@ -70,16 +70,6 @@
 	  <groupId>io.quarkus</groupId>
 	  <artifactId>quarkus-container-image-docker</artifactId>
 	</dependency>
-    <dependency>
-	  <groupId>net.logstash.logback</groupId>
-	  <artifactId>logstash-logback-encoder</artifactId>
-	  <version>${logstash.logback.encoder.version}</version>
-	</dependency>
-	<dependency>
-	  <groupId>ch.qos.logback</groupId>
-	  <artifactId>logback-classic</artifactId>
-	  <version>${logback.classic.version}</version>
-	</dependency>
   </dependencies>
   <profiles>
     <profile>

@@ -21,7 +21,7 @@ import ec.com.dinersclub.dddmodules.application.events.audit.dto.Auditoria;
 public class AuditResource {
 	
 	@ConfigProperty(name = "audit.microservice.name")
-	private String microservice;
+	String microservice;
 
 	@Inject
 	IAuditoriaEvent auditService;
