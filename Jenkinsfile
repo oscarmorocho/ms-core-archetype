@@ -73,7 +73,7 @@ spec:
                     echo " --> Rama: ${branch}"
                     
                     switch(branch) {
-                    case 'main': 
+                    case 'main':
                         AMBIENTE = 'main'
                         NAMESPACE = 'apiservice-workshop'
                         break
@@ -134,11 +134,8 @@ spec:
                 label "${jenkinsWorker}"
             }
             when { 
-                not {
-		          anyOf {
-		            branch 'main'
-		            branch 'master'
-		          }
+                not { 
+                    branch 'master' 
                 }
             }
             stages {
