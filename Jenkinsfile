@@ -134,8 +134,11 @@ spec:
                 label "${jenkinsWorker}"
             }
             when { 
-                not { 
-                    branch 'master' 
+                not {
+		          anyOf {
+		            branch 'main'
+		            branch 'master'
+		          }
                 }
             }
             stages {
