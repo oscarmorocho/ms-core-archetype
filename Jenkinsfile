@@ -73,6 +73,10 @@ spec:
                     echo " --> Rama: ${branch}"
                     
                     switch(branch) {
+                    case 'main':
+                        AMBIENTE = 'main'
+                        NAMESPACE = 'apiservice-workshop'
+                        break
                     case 'develop': 
                         AMBIENTE = 'dev'
                         NAMESPACE = 'apiservice-microservicios'
@@ -100,9 +104,6 @@ spec:
                         break  
                     case 'master': 
                         AMBIENTE = 'master'
-                        break
-                    case 'main':
-                        AMBIENTE = 'main'
                         break
                     default:
                         println("Branch value error: " + branch)
@@ -134,8 +135,7 @@ spec:
             }
             when { 
                 not { 
-                    branch 'master'
-                    branch 'main'
+                    branch 'master' 
                 }
             }
             stages {
@@ -218,7 +218,7 @@ spec:
 		                
 		                	def branch = "${env.BRANCH_NAME}"
                     
-		                    if (branch != "master" || branch !="main"){
+		                    if (branch != "master"){
 		                    
 		                        echo "environment version"
 		                        def values = APP_VERSION.split('-')
