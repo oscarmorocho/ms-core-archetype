@@ -9,7 +9,6 @@
   <a href="https://www.docker.com/"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1024px-Docker_%28container_engine%29_logo.svg.png" alt="docker" width="100">
   </a>
 </h1>
-
 <p align="center">
 	<a href=""><img src="https://img.shields.io/badge/build-check status-green?logo=jenkins&logoColor=white&style=plastic" alt="Jenkins"></a>
   	<a href="https://apiservicechile.slack.com/ssb/redirect?entry_point=get_started"><img src="https://img.shields.io/badge/Slack-Join our channel-purple?logo=slack&style=plastic" alt="slack-99"></a>
@@ -34,7 +33,7 @@
 
 ## Descripción del servicio
 
-Este arquetipo esta basado en domain-driven design (DDD) and hexagonal architecture.
+Este arquetipo esta basado en "domain driven design" (DDD) and hexagonal architecture.
 https://apiservice2.atlassian.net/wiki/spaces/DE/pages/772735342/1.4.1+DDD+en+simple
 https://apiservice2.atlassian.net/wiki/spaces/DE/pages/802390443/1.1.1+Arquitectura+hexagonal
 
